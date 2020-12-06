@@ -109,7 +109,7 @@ The cosine similarity matrix is calculated from the vectorisation matrix as foll
 ```
 cosim = (X * X.T).toarray()
 ```
-Result is a matrix of 609x609 items of document-to-document cosine similartiy value, with a value of 1 on the diagonal, representing the cosine similarity of a document with itself.
+Result is a matrix of 609x609 items of document-to-document cosine similarity value, with a value of 1 on the diagonal, representing the cosine similarity of a document with itself.
 
 A histogram of the cosine similarity values:
 
@@ -119,10 +119,13 @@ A histogram of the cosine similarity values:
 
 
 By looking at the highest cosine similarity values in the dataset, besides the values on the matrix diagonal, we find 4 values >0.99999 representing the cosine similarity between two pairs of documents. When lookin at the PDF files we can clearly state that these documents are 'identical'.
+
 6b15787e2654b725f2bfc86da7dea511.pdf and e7d861735330f70a05d0aa51a5a4b096.pdf are two documents from The Housley Bequest Limited that are exactly identical but for the year of the report and the actual numbers.
+
 5d06055f6a4b58260fe2dcf6871db799.pdf and efac1f09a642532db1fb18b63e1f13b1.pdf are two identical fiancial reports for year 2015, only the ordering of two pages is slighty different, in one document they are fiund at the beginning of document, in the other at the end.¶
 
 When looking a the lowest maximum cosine similarity for all documents we find a document with lowest max cosine sim < 0.1:
+
 'b57e1ae7a9f286733362fa87fa704543.pdf' appears to be a document that was scanned upside down and doesn't look like any other document.
 
 These documents can be excluded from clustering.
