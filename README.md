@@ -2,7 +2,7 @@
 
 A Use Case for testing document clustering based on text content using the Kleister-charity dataset.
 
-Only a selection of the dataset is used to facilitate evaluation. The documents' texts are processed and lemmitized with NLTK. TF-IDF vectorisation is applied to test different clustering algoritms. And an attempt is made to evaluate the different clustering approaches.
+Only a selection of the dataset is used to facilitate processing and evaluation. The documents' texts are processed and lemmitized with NLTK. TF-IDF vectorisation is applied to to create a cosine similarity matrix and to test different clustering algoritms. An attempt is made to evaluate the different clustering approaches.
 
 ### Table of contents
 
@@ -11,7 +11,8 @@ Only a selection of the dataset is used to facilitate evaluation. The documents'
 * [Kleister-charity dataset](#kleister-charity-dataset)
 * [Exploring data and preprocessing](#exploring-data-and-preprocessing)
 * [Lemmitization](#lemmitization)
-* [TF-IDF](#tf-idf)
+* [TF-IDF vectorisation](#tf-idf-vectorisation)
+* [Document similarity](#document-similarity)
 * [Clustering](#clustering)
 * [Evaluation](#evaluation)
 
@@ -56,17 +57,79 @@ cd path/kleister-charity
 
 ```git-annex get-test-documents-from-s3.sh``` to download dev-0 and test-A test sets documents (+2Gb)
 
-I chose to work on the test set documents as the total file size is reduced and 'manual' evaluation of any clustering effort is still practical.
+I chose to work on the test set documents, test-A, as the total file size is reduced and 'manual' evaluation of any clustering effort is still practical.
 
 ## Exploring data and preprocessing
 
 See ```Exploring Kleister.ipynb```
 
+A subset of the Kleister-charity dataset was selected to work on, test-A, which consists of 609 documents. The test-A tsv file contains the OCR'ed text for those 609 documents.
+Of the 4 OCR approaches in the data, 'text_djvu', 'text_tesseract', 'text_textract' and 'text_best', the Tesseract processed text is used. It was difficult to distinguish the best OCR rendering of the scanned PDF files but the Tesseract processing is among the best when looking at text quality. After inspecting the OCR'ed text preprocessing is applied by removing line breaks.
+
 ## Lemmitization
 
-## TF-IDF
+The document text further needs to be tokenized for vectorisation, here lemmitization was used specifically. Text is lower cased, punctuation removed and only tokens containing letters are kept. Lemmitization was done with NLTK's ```WordNetLemmatizer```. 
+ ```
+def tokenize_lem(text):
+    lem = WordNetLemmatizer()
+    # first tokenize by sentence, then by word to ensure that punctuation is caught as it's own token
+    tokens = [word.lower() for sent in nltk.sent_tokenize(text) for word in nltk.word_tokenize(sent)]
+    filtered_tokens = []
+    # filter out any tokens not containing letters (e.g., numeric tokens, raw punctuation)
+    for token in tokens:
+        if re.match('[a-zA-Z]', token) and not token in stop_words and len(token)>3:
+            lemmatized_word = lem.lemmatize(token)
+            filtered_tokens.append(lemmatized_word)
+    return filtered_tokens
+  ```
+## TF-IDF vectorisation
+
+See ```Kleister TF-IDF.ipynb```
+
+The 'text_tesseract' OCR column is vectorised using Sci-kit Learn's ```tfidf_vectorizer```.
+
+TF-IDF, or term frequency - inverse document frequency, is a numerical statistic that is intended to reflect how important a word is to a document in a collection or corpus. The tf–idf value increases proportionally to the number of times a word appears in the document and is offset by the number of documents in the corpus that contain the word.
+TF-IDF = tf*idf
+
+A maximum of 5000 features is set and the vectoriser will use the function described above for tokenization.
+```
+# Call tfidf_vectorizer with params -> point to 'tokenize_lem' func which lemmatizes and removes stop words
+tfidf_vectorizer = TfidfVectorizer(max_df= 0.8, min_df= 0,max_features=5000, stop_words=None,
+                                   use_idf=True, tokenizer=tokenize_lem, norm='l2')
+X = tfidf_vectorizer.fit_transform(kl['text_tesseract']) # fit vectorizer and transform documents' text content to vectors
+X.todense() # turn sparse matrix to dense
+```
+TF-IDF vectorisation returns a sparse matrix with 609 document rows and 5000 feature columns.
+
+## Document similarity
+
+Cosine similarity is a measure of similarity between two non-zero vectors of an inner product space. It is defined to equal the cosine of the angle between them, which is also the same as the inner product of the same vectors normalized to both have length 1. A cosine similarity of 0 means that the angle between two vectors equals 90 deg and the documents are not similar at all. A value of 1, for an angle of 0 deg, means that the documents are same. High cosine similarity values represent similar documents.
+
+The cosine similarity matrix is calculated from the vectorisation matrix as follows:
+```
+cosim = (X * X.T).toarray()
+```
+Result is a matrix of 609x609 items of document-to-document cosine similartiy value, with a value of 1 on the diagonal, representing the cosine similarity of a document with itself.
+
+A histogram of the cosine similarity values:
+
+<p align="center">
+  <img src="https://github.com/kristof-becode/3Deploy-House/blob/master/img/stitchedCHMs.png" width=50% >
+</p>
+
+
+By looking at the highest cosine similarity values in the dataset, besides the values on the matrix diagonal, we find 4 values >0.99999 representing the cosine similarity between two pairs of documents. When lookin at the PDF files we can clearly state that these documents are 'identical'.
+6b15787e2654b725f2bfc86da7dea511.pdf and e7d861735330f70a05d0aa51a5a4b096.pdf are two documents from The Housley Bequest Limited that are exactly identical but for the year of the report and the actual numbers.
+5d06055f6a4b58260fe2dcf6871db799.pdf and efac1f09a642532db1fb18b63e1f13b1.pdf are two identical fiancial reports for year 2015, only the ordering of two pages is slighty different, in one document they are fiund at the beginning of document, in the other at the end.¶
+
+When looking a the lowest maximum cosine similarity for all documents we find a document with lowest max cosine sim < 0.1:
+'b57e1ae7a9f286733362fa87fa704543.pdf' appears to be a document that was scanned upside down and doesn't look like any other document.
+
+These documents can be excluded from clustering.
 
 ## Clustering
+
+
 
 ## Evaluation
 
