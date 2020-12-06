@@ -13,6 +13,7 @@ Only a selection of the dataset is used to facilitate processing and evaluation.
 * [Lemmitization](#lemmitization)
 * [TF-IDF vectorisation](#tf-idf-vectorisation)
 * [Document similarity](#document-similarity)
+* [Query n most similar documents](#query-n-most-similar-documents)
 * [Clustering](#clustering)
 * [Evaluation](#evaluation)
 
@@ -137,6 +138,29 @@ When looking a the lowest maximum cosine similarity for all documents we find a 
 
 These documents can be excluded from clustering.
 
+## Query n most similar documents
+
+Query n most similar documents for a given filename from 'kl' dataframe (with OCR column and filename), and cosine similarity matrix 'cosim' after vectorisation of 'kl' OCR column with TF-IDF
+```
+def query_sim(doc:str, n:int)->list:
+    # filename must be valid and existing and the range of documents to query must be shape-1
+    if re.search('(.).pdf',doc) and doc in kl.filename.tolist() and n in range(kl.shape[0]-1): 
+        ind = kl[kl['filename'] == doc].index.values # get index document filename in dataframe
+        row = cosim[ind,:] # retrieve the row from cosine similarity matrix for that filename
+        sort = np.argsort(row)[0] # sort that row
+        n_high = sort[-(n+1):].tolist() # sorted ascending; so take last n+1 largest elements and make list
+        n_high.remove(ind) # remove cosine similarity value of 1, of the element with itself, n elem remain
+        sims = {}
+        # iterate reversed list n_high; from greater to smaller cosine similarity values
+        for item in n_high[::-1]:
+            sims[kl.iloc[item]['filename']] = cosim[ind,item][0]
+        #create dataframe because it looks nice, but dictionary above already contains all information
+        sim_docs = pd.DataFrame({'document' : sims.keys(),'cosine similarity': sims.values()})
+    else:
+        sim_docs = []
+        print(f'not a valid document name')
+    return sim_docs
+```
 ## Clustering
 
  See ```Kleister_Cluster.ipynb```
