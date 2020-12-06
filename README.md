@@ -61,7 +61,7 @@ I chose to work on the test set documents, test-A, as the total file size is red
 
 ## Exploring data and preprocessing
 
-See ```Exploring Kleister.ipynb```
+See ```Exploring_Kleister.ipynb```
 
 A subset of the Kleister-charity dataset was selected to work on, test-A, which consists of 609 documents. The test-A tsv file contains the OCR'ed text for those 609 documents.
 Of the 4 OCR approaches in the data, 'text_djvu', 'text_tesseract', 'text_textract' and 'text_best', the Tesseract processed text is used. It was difficult to distinguish the best OCR rendering of the scanned PDF files but the Tesseract processing is among the best when looking at text quality. After inspecting the OCR'ed text preprocessing is applied by removing line breaks.
@@ -84,7 +84,7 @@ def tokenize_lem(text):
   ```
 ## TF-IDF vectorisation
 
-See ```Kleister TF-IDF.ipynb```
+See ```Kleister_TF-IDF.ipynb```
 
 The 'text_tesseract' OCR column is vectorised using Sci-kit Learn's ```tfidf_vectorizer```.
 
@@ -103,6 +103,8 @@ TF-IDF vectorisation returns a sparse matrix with 609 document rows and 5000 fea
 
 ## Document similarity
 
+See ```Kleister_TF-IDF.ipynb```
+
 Cosine similarity is a measure of similarity between two non-zero vectors of an inner product space. It is defined to equal the cosine of the angle between them, which is also the same as the inner product of the same vectors normalized to both have length 1. A cosine similarity of 0 means that the angle between two vectors equals 90 deg and the documents are not similar at all. A value of 1, for an angle of 0 deg, means that the documents are same. High cosine similarity values represent similar documents.
 
 The cosine similarity matrix is calculated from the vectorisation matrix as follows:
@@ -114,23 +116,27 @@ Result is a matrix of 609x609 items of document-to-document cosine similarity va
 A histogram of the cosine similarity values:
 
 <p align="center">
-  <img src="https://github.com/kristof-becode/3Deploy-House/blob/master/img/stitchedCHMs.png" width=50% >
+  <img src="https://github.com/kristof-becode/Document-Clustering/blob/master/img/histogram_cosim.png" width=75% >
 </p>
 
 
-By looking at the highest cosine similarity values in the dataset, besides the values on the matrix diagonal, we find 4 values >0.99999 representing the cosine similarity between two pairs of documents. When lookin at the PDF files we can clearly state that these documents are 'identical'.
+* By looking at the highest cosine similarity values in the dataset, besides the values on the matrix diagonal, we find 4 values >0.99999 representing the cosine similarity between two pairs of documents. When lookin at the PDF files we can clearly state that these documents are 'identical'.
 
 6b15787e2654b725f2bfc86da7dea511.pdf and e7d861735330f70a05d0aa51a5a4b096.pdf are two documents from The Housley Bequest Limited that are exactly identical but for the year of the report and the actual numbers.
 
 5d06055f6a4b58260fe2dcf6871db799.pdf and efac1f09a642532db1fb18b63e1f13b1.pdf are two identical fiancial reports for year 2015, only the ordering of two pages is slighty different, in one document they are fiund at the beginning of document, in the other at the end.¶
 
-When looking a the lowest maximum cosine similarity for all documents we find a document with lowest max cosine sim < 0.1:
+* When looking a the lowest maximum cosine similarity for all documents we find a document with lowest max cosine sim < 0.1:
 
 'b57e1ae7a9f286733362fa87fa704543.pdf' appears to be a document that was scanned upside down and doesn't look like any other document.
 
 These documents can be excluded from clustering.
 
 ## Clustering
+
+ See ```Kleister_Cluster.ipynb```
+ 
+ 
 
 
 
